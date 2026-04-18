@@ -50,10 +50,9 @@ def main():
     print(f"\nИТОГОВАЯ СДНФ ПРОИЗВОДНОЙ: {analyzer.vector_to_sdnf(current_vec, current_vars)}")
     minz = Minimizer(func.vector, func.variables)
     minz.method_calculation(mode='DNF')
-    minz.method_table_calc(mode='DNF')
     minz.method_calculation(mode='KNF')
+    minz.method_table_calc(mode='DNF')
     minz.method_table_calc(mode='KNF')
     minz.method_karnaugh()
-
 if __name__ == "__main__":
     main()

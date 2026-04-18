@@ -37,7 +37,7 @@ class Minimizer:
 
     def method_calculation(self, mode='DNF'):
         target = 1 if mode == 'DNF' else 0
-        print(f"\n>>> МЕТОД 1: РАСЧЕТНЫЙ ({mode})")
+        print(f"\n>>> РАСЧЕТНЫЙ ({mode})")
         initial = self.get_initial_terms(target)
         if not initial:
             print(f"Нет наборов для {mode}")
@@ -51,7 +51,7 @@ class Minimizer:
 
     def method_table_calc(self, mode='DNF'):
         target = 1 if mode == 'DNF' else 0
-        print(f"\n>>> МЕТОД 2: РАСЧЕТНО-ТАБЛИЧНЫЙ ({mode})")
+        print(f"\n РАСЧЕТНО-ТАБЛИЧНЫЙ ({mode})")
         initial = self.get_initial_terms(target)
         if not initial: 
             return "" 
@@ -86,37 +86,39 @@ class Minimizer:
         res = self.format_result(selected, mode)
         print(f"Результат ({mode}): {res}")
         return res
+    
+    
+    
+    
+    
+        
+        
+    
+            
+    
+    
+            
+    
+    
+            
+    
+    
+    
+            
+    
+    
+    
+            
+    
+    
+        
+    
+    
+        
+    
+    
 
-    def method_karnaugh(self):
-        print("\n>>> МЕТОД 3: ТАБЛИЧНЫЙ (КАРТА КАРНО)")
-        gray = ["00", "01", "11", "10"]
-        if self.n == 2:
-            rows, cols = ["0", "1"], ["0", "1"]
-            r_vars, c_vars = self.variables[:1], self.variables[1:]
-        elif self.n == 3:
-            rows, cols = ["0", "1"], gray
-            r_vars, c_vars = self.variables[:1], self.variables[1:]
-        elif self.n == 4:
-            rows, cols = gray, gray
-            r_vars, c_vars = self.variables[:2], self.variables[2:]
-        else:
-            print("Карно только для 2-4 переменных.")
-            return
-        print(f"Карта для: {''.join(r_vars)} \\ {''.join(c_vars)}")
-        print("      " + "  ".join(cols))
-        print("    " + "-" * (len(cols) * 4 + 2))
-        for r in rows:
-            line = f" {r} |"
-            for c in cols:
-                idx = int(r + c, 2)
-                line += f"  {self.vector[idx]} "
-            print(line)
-        print("\nРезультаты минимизации по карте:")
-        res_dnf = self.method_table_calc(mode='DNF')
-        res_knf = self.method_table_calc(mode='KNF')
-        print(f"\nИТОГОВАЯ МДНФ (по 1): {res_dnf}")
-        print(f"ИТОГОВАЯ МКНФ (по 0): {res_knf}")
-
+    
     def term_to_str(self, term, mode='DNF'):
         parts = []
         for i in range(self.n):
@@ -139,3 +141,165 @@ class Minimizer:
         sep = " | " if mode == 'DNF' else " & "
         formatted = sorted([self.term_to_str(t, mode) for t in terms])
         return sep.join(formatted)
+    def method_karnaugh(self):
+        def gray_code(n):
+            if n == 0:
+                return ['']
+            prev = gray_code(n - 1)
+            return ['0' + x for x in prev] + ['1' + x for x in reversed(prev)]
+
+        def differ_by_one_bit(a, b):
+            return sum(x != y for x, y in zip(a, b)) == 1
+
+        def merge_terms(a, b):
+            return ''.join([x if x == y else '-' for x, y in zip(a, b)])
+
+        def term_covers(term, bits):
+            return all(t == b or t == '-' for t, b in zip(term, bits))
+
+        def minimize(target_value):
+            terms = []
+            for i, v in enumerate(self.vector):
+                if v == target_value:
+                    terms.append(format(i, f'0{n}b'))
+
+            if not terms:
+                return "0" if target_value == 1 else "1"
+
+            groups = {}
+            for t in terms:
+                groups.setdefault(t.count('1'), []).append(t)
+
+            prime_implicants = set()
+
+            while groups:
+                new_groups = {}
+                used = set()
+
+                keys = sorted(groups.keys())
+                for i in range(len(keys) - 1):
+                    for a in groups[keys[i]]:
+                        for b in groups[keys[i + 1]]:
+                            if differ_by_one_bit(a, b):
+                                merged = merge_terms(a, b)
+                                new_groups.setdefault(merged.count('1'), []).append(merged)
+                                used.add(a)
+                                used.add(b)
+
+                for group in groups.values():
+                    for term in group:
+                        if term not in used:
+                            prime_implicants.add(term)
+
+                groups = {}
+                for k, v in new_groups.items():
+                    groups[k] = list(set(v))
+
+            coverage = {t: [] for t in terms}
+            for pi in prime_implicants:
+                for t in terms:
+                    if term_covers(pi, t):
+                        coverage[t].append(pi)
+
+            essential = set()
+            for t, pis in coverage.items():
+                if len(pis) == 1:
+                    essential.add(pis[0])
+
+            covered = set()
+            for pi in essential:
+                for t in terms:
+                    if term_covers(pi, t):
+                        covered.add(t)
+
+            remaining = set(terms) - covered
+
+            for pi in prime_implicants:
+                if remaining:
+                    covers = [t for t in remaining if term_covers(pi, t)]
+                    if covers:
+                        essential.add(pi)
+                        for t in covers:
+                            remaining.remove(t)
+
+            def term_to_expr(term, is_dnf):
+                parts = []
+                for i, ch in enumerate(term):
+                    if ch == '-':
+                        continue
+                    var = self.variables[i]
+
+                    if is_dnf:
+                        parts.append(var if ch == '1' else f"!{var}")
+                    else:
+                        parts.append(var if ch == '0' else f"!{var}")
+
+                if not parts:
+                    return "1"
+
+                if is_dnf:
+                    return "&".join(parts)
+                else:
+                    return "(" + " | ".join(parts) + ")"
+
+            if target_value == 1:
+                return " | ".join(f"({term_to_expr(t, True)})" for t in essential)
+            else:
+                return " & ".join(term_to_expr(t, False) for t in essential)
+
+        n = len(self.variables)
+
+        if n < 2 or n > 5:
+            print("Карта Карно: поддержка 2–5 переменных")
+            return
+
+        print("\n" + "="*40)
+        print(" КАРТА КАРНО ")
+        print("="*40)
+
+        
+        if n == 5:
+            row_vars = self.variables[:2]
+            col_vars = self.variables[2:4]
+            extra_var = self.variables[4]
+        else:
+            row_vars = self.variables[:n//2]
+            col_vars = self.variables[n//2:]
+            extra_var = None
+
+        row_gray = gray_code(len(row_vars))
+        col_gray = gray_code(len(col_vars))
+
+        def get_value(bits):
+            return self.vector[int(bits, 2)]
+
+        
+        if not extra_var:
+            print("    ", "  ".join(col_gray))
+            for r in row_gray:
+                row = []
+                for c in col_gray:
+                    val = get_value(r + c)
+                    row.append(str(val))
+                print(f"{r} |  " + "  ".join(row))
+        else:
+            for e in ['0', '1']:
+                print(f"\nСлой {extra_var} = {e}")
+                print("    ", "  ".join(col_gray))
+                for r in row_gray:
+                    row = []
+                    for c in col_gray:
+                        val = get_value(r + c + e)
+                        row.append(str(val))
+                    print(f"{r} |  " + "  ".join(row))
+
+        
+        dnf = minimize(1)
+        knf = minimize(0)
+
+        print("\n" + "-"*40)
+        print(" РЕЗУЛЬТАТ МИНИМИЗАЦИИ КАРНО")
+        print("-"*40)
+
+        print(f"Минимальная ДНФ: {dnf}")
+        print(f"Минимальная КНФ: {knf}")

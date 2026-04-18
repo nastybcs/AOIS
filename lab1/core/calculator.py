@@ -13,11 +13,12 @@ class Calculator:
             res[i] = sum_val % 2
             carry = sum_val // 2
         return res
-    
+
     def add (self, num1: BinaryNumber, num2: BinaryNumber):
         bits1 = num1.get_complement_code()
         bits2 = num2.get_complement_code()
         return self.full_add_logic(bits1, bits2)
+    
     
     def subtract (self, num1: BinaryNumber, num2: BinaryNumber):
         negative_bit = BinaryNumber(-num2.decimal_value)
@@ -112,14 +113,9 @@ class Calculator:
             power += 1
         return result
     def complement_to_int(self, bits):
-        
         if bits[0] == 0:
             return self.bits_to_int_unsigned(bits[1:])
-        
-        
-        
         inverted = [1 if b == 0 else 0 for b in bits]
-        
         one = [0] * (len(bits) - 1) + [1]
         mag = self.full_add_logic(inverted, one)
         return -self.bits_to_int_unsigned(mag)

@@ -35,8 +35,9 @@ def main():
                 a = int(input("Введите число A: "))
                 b = int(input("Введите число B: "))
                 num1, num2 = BinaryNumber(a), BinaryNumber(b)
-                
-                
+                print (f"Прямой код {format_bits(num1.get_direct_code())}")
+                print(f"Обратный код {format_bits(num1.get_reverse_code())}")
+                print(f"Дополнительный код {format_bits(num1.get_complement_code())}")
                 add_res = calc.add(num1, num2)
                 print("\n[+] Сложение:")
                 print(f"Биты: {format_bits(add_res)}")

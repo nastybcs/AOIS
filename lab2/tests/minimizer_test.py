@@ -54,5 +54,3 @@ class TestMinimizerFull(unittest.TestCase):
         res = m.method_table_calc(mode='DNF')
         self.assertTrue("a" in res and "b" in res)
 
-if __name__ == '__main__':
-    unittest.main()

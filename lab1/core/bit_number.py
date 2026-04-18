@@ -29,6 +29,7 @@ class BinaryNumber:
             else:
                 reverse[i] = 0
         return reverse
+
     def get_complement_code (self):
         if self.decimal_value >= 0:
             return self.get_direct_code()

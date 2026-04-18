@@ -25,6 +25,12 @@ class TestCalculator(unittest.TestCase):
         res = self.calc.multiply(n1, n2)
         self.assertEqual(res[0], 0) 
         self.assertEqual(self.calc.bits_to_int_unsigned(res[1:]), 42)
+    def test_multiply_integers_minus(self):
+        n1 = BinaryNumber(6)
+        n2 = BinaryNumber(-7)
+        res = self.calc.multiply(n1, n2)
+        self.assertEqual(res[0], 1) 
+        self.assertEqual(self.calc.bits_to_int_unsigned(res[1:]), 42)
 
     def test_divide_integers(self):
         n1 = BinaryNumber(13)
@@ -75,6 +81,11 @@ class TestCalculator(unittest.TestCase):
         f2 = self.calc.float_to_ieee754(0.25)
         res_bits = self.calc.operate_floats(f1, f2, subtract=False)
         self.assertEqual(self.calc.ieee754_to_float(res_bits), 0.75)
+    def test_float_substract(self):
+        f1 = self.calc.float_to_ieee754(0.5)
+        f2 = self.calc.float_to_ieee754(0.25)
+        res_bits = self.calc.operate_floats(f1, f2, subtract=True)
+        self.assertEqual(self.calc.ieee754_to_float(res_bits), 0.25)
 
     def test_float_multiply(self):
         f1 = self.calc.float_to_ieee754(2.5)
@@ -87,6 +98,11 @@ class TestCalculator(unittest.TestCase):
         f2 = self.calc.float_to_ieee754(4.0)
         res_bits = self.calc.divide_floats(f1, f2)
         self.assertEqual(self.calc.ieee754_to_float(res_bits), 2.5)
+    def test_float_divide_signe(self):
+        f1 = self.calc.float_to_ieee754(10.0)
+        f2 = self.calc.float_to_ieee754(-4.0)
+        res_bits = self.calc.divide_floats(f1, f2)
+        self.assertEqual(self.calc.ieee754_to_float(res_bits), -2.5)
 
     def test_float_zero(self):
         bits = self.calc.float_to_ieee754(0.0)

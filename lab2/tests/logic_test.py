@@ -30,7 +30,5 @@ class TestBooleanFunction(unittest.TestCase):
         self.assertEqual(self.func.get_index_form(), 1)
 
     def test_print_table(self):
-        try:
-            self.func.print_table()
-        except Exception as e:
-            self.fail(f"print_table() raised {e} unexpectedly!")
+        self.func.print_table()
+
